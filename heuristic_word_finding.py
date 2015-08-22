@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-English Word Segmentation in Python
+English Word Heuristical Finder in Python
+
 
 Word segmentation is the process of dividing a phrase without spaces back
 into its constituent parts. For example, consider a phrase like "thisisatest".
@@ -18,7 +19,7 @@ should accompany this file. A copy of these files may be found at
 http://norvig.com/ngrams/ under the names count_1w.txt and count_2w.txt
 respectively.
 
-# Copyright (c) 2014 by Grant Jenks
+# Copyright (c) 2015 by Weihan Jiang
 
 Based on code from the chapter "Natural Language Corpus Data"
 from the book "Beautiful Data" (Segaran and Hammerbacher, 2009)
@@ -38,26 +39,47 @@ if sys.hexversion < 0x03000000:
 FOUND = True
 NOT_FOUND = False
 
-
 class Data(object):
+    '''
+    Read corpus from path, and provide the following functionalities,
+    1. data as "property", it is a dictionary where key is word,
+       while the value is the frequency count of this word.
+    2. generator that yield word and its frequency
+    '''
     def __init__(self):
         self._unigram_counts = dict()
-        self._unigram_counts = self.parse_file(join(dirname(realpath(__file__)), 'corpus', 'unigrams.txt'))
+        self._unigram_counts = self.parse_file(
+		join(dirname(realpath(__file__)), 'corpus', 'unigrams.txt')
+	)
 
-    def parse_file(self,filename):
+    def parse_file(self, filename):
+        '''
+        parse file and form a dictionary
+        '''
         with open(filename) as fptr:
             lines = (line.split('\t') for line in fptr)
             return dict((word, float(number)) for word, number in lines)
 
     @property
     def data(self):
+        '''
+        return the whole dictionary out to user as a property.
+        '''
         return self._unigram_counts
 
     def __iter__(self):
         for each in self._unigram_counts.keys():
             yield each
 
-class Construct_corpus_tree(object):
+class ConstructCorpus(object):
+    '''
+    according to the minimal character limit, construct a corpus at initial time.
+    it provides the following two properties,
+    1. ngram_distribution -- a dictionary where key is the ngram, value is an int
+       of summation of frequency of each English English words starts with that specific ngram
+    2. ngram_tree -- a dictionary where key is the ngram, value is a list
+       containing all possile English words starts with that specific ngram
+    '''
     def __init__(self, min_length):
         self._minlen = min_length
         
@@ -94,10 +116,10 @@ class Construct_corpus_tree(object):
 class heuristic_word_find(object):
     __slot__ = ("_minlen", "_casesensitive")
 
-    def __init__(self, min_length, casesensitive = False):
+    def __init__(self, min_length, casesensitive=False):
         self._minlen = min_length
         self._casesensitive = casesensitive
-        corpus = Construct_corpus_tree(self._minlen)
+        corpus = ConstructCorpus(self._minlen)
         self.ngram_distribution = corpus.ngram_distribution
         self.ngram_tree = corpus.ngram_tree
 
@@ -135,10 +157,12 @@ class heuristic_word_find(object):
                 candidate_list.append((self.ngram_distribution[prefix], prefix))
             else:
                 pass #means this prefix was not likely to be a part of meaningful word
-        
+
         candidate_list.sort(reverse=True)
         for each in candidate_list:
-            print "[debug]: target string --> {}".format(each[1] + pair_dic[each[1]])
+            print "[debug]: target string --> {}".format(
+		each[[1] + pair_dic[each[1]]
+	    )
             print "[debug]: ngram tree    --> {}".format(self.ngram_tree[each[1]])
             if each[1] in self.ngram_tree[each[1]]:
                 print "Found: {}".format(each[1])
@@ -171,14 +195,15 @@ class heuristic_word_find(object):
         candidate_list.sort(reverse=True)
         meaningful_words = []
         for each in candidate_list:
-            print "[debug]: target string --> {}".format(each[1] + pair_dic[each[1]])
-            print "[debug]: ngram tree    --> {}".format(self.ngram_tree[each[1]])
+            print "[debug]: target string --> {}".format(
+                each[1] + pair_dic[each[1]]
+            )
+            print "[debug]: ngram tree    --> {}".format(
+                self.ngram_tree[each[1]]
+            )
+
             if each[1] in self.ngram_tree[each[1]]:
                 meaningful_words.append(each[1])
-#            else:
-#                for x in self.ngram_tree[each[1]]:
-#                    if x in each[1] + pair_dic[each[1]]:
-#                        meaningful_words.append(x)
 
         return meaningful_words
 
