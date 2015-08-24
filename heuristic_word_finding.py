@@ -36,7 +36,7 @@ http://norvig.com/ngrams/ under the name count_1w.txt.
 
 # Copyright (c) 2015 by Weihan Jiang
 
-Based on code from the chapter "Natural Language Corpus Data"
+Original corpus is from the chapter "Natural Language Corpus Data"
 from the book "Beautiful Data" (Segaran and Hammerbacher, 2009)
 http://oreilly.com/catalog/9780596157111/
 
