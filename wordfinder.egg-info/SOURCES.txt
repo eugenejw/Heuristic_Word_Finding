@@ -1,0 +1,10 @@
+LICENSE
+MANIFEST.in
+README.rst
+setup.py
+wordfinder.py
+corpus/unigrams.txt
+wordfinder.egg-info/PKG-INFO
+wordfinder.egg-info/SOURCES.txt
+wordfinder.egg-info/dependency_links.txt
+wordfinder.egg-info/top_level.txt

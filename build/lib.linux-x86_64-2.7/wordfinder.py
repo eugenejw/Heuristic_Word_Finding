@@ -251,7 +251,7 @@ class WordFinder(object):
         return meaningful_words
 
 __title__ = 'English Word Finder'
-__version__ = '0.142'
+__version__ = '0.141'
 __build__ = 0x0003
 __author__ = 'Weihan Jiang'
 __license__ = 'Apache 2.0'

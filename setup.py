@@ -35,6 +35,7 @@ setup(
     packages=['corpus'],
     package_data={'corpus': ['*.txt']},
     tests_require=['tox'],
+    keywords = ['word search','word find','word searching','meaningful words','from string', 'from text'],
     cmdclass={'test': Tox},
     platforms='any',
     classifiers=[

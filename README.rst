@@ -1,18 +1,17 @@
-English Word Segmentation in Python
+Heuristic English Word Finding in Python
 ===================================
 
-.. image:: https://api.travis-ci.org/grantjenks/wordsegment.svg
-    :target: http://www.grantjenks.com/blog/portfolio-post/english-word-segmentation-python/
+WordFinder is a module finding English word(s) from a string in a heuristic manner.
+Written in pure-Python, and based on a trillion-word corpus.
 
-WordFinder is an Apache2 licensed module for English word finding from a string, written
-in pure-Python, and based on a trillion-word corpus.
-Word Finding is the process of find meaningful word(s)(whose len(word)>=N, set by user), from a string(with unlimited length).
+Typically, the problem is to find whther the following string contains meaningful word that has len(word)>= 5.
+"fsdkjqlerjgwejrgjeqoigrghnjksnvasnva^^safq*wjrfdgivjqergjqeuniversitylqpweovar'qemrbvqebebq"
 
 Maybe the hardest part of find meaningful words is to do the job wisely rather than costing O(n^2).
 
 In this WordFinder module, a heuristic way has been adopted to reduce the complexity from O(n^2) to O(n).
 
-The heuristic falvor is built on top of  enchant English dictionary together with Google unigram word corpus.
+The heuristic flavor is built on top of  enchant English dictionary together with Google unigram word corpus.
 
 Using the corpus was inspired by the chapter "`Natural Language Corpus Data`_" by Peter Norvig,
 from the book "`Beautiful Data`_" (Segaran and Hammerbacher, 2009).
@@ -32,7 +31,7 @@ So any word found in the truncated corpus will be deemed as meaningful.
 .. _`distributed`: https://catalog.ldc.upenn.edu/LDC2006T13
 .. _`Python enchant`: https://pypi.python.org/pypi/pyenchant/
 
-Features
+<h2>Features</h2>
 --------
 
 - Pure-Python
@@ -43,31 +42,32 @@ Features
 - Developed on Python 2.7
 - Tested on CPython 2.7 and 3.4
 
-User Guide
+<h2>User Guide</h2>
 ----------
 
-Installing wordfinder is simple with
-`pip <http://www.pip-installer.org/>`_::
+Installing wordfinder is simple with <a href="https://pip.pypa.io/en/stable/">pip</a>
 
-    > pip install wordfinder
+    <code>>>> pip install wordfinder</code>
 
 In your own Python programs, you'll mostly want to use *search* to query
-whether a string contains any meaningful words whose length >= N.
+whether a string contains any meaningful words whose length >= N(set by user).
 True is returned if found.
 
+    <code>#import
     >>> from wordfinder import WordFinder
+    #instantiation. At the instantiating time, the minimal word length is set.
     >>> wf = WordFinder(5)
+    #start to search whether word with len(word)>=5 is in the given string.
     >>> wf.search("afqwerfqvqervqtrehghqehelloworldasfsvsdv sfaqsdf")
-    Found: world
-    True
+    True</code>
 
 Additonally, you could use *get* to get all meaningful words from a string.
 
-    >>> wf.get("asdsdgfuierhghelloafsdjkasjdf@#$#sdfsuniversityadfsaof*washington")
-    ['university', 'washing', 'washington', 'hello', 'ashing']
+    <code>>>> wf.get("asdsdgfuierhghelloafsdjkasjdf@#$#sdfsuniversityadfsaof*washington")
+    ['university', 'washing', 'washington', 'hello', 'ashing']</code>
 
 
-API Documentation
+<h2>API Documentation</h2>
 -----------------
 
 - search(text)
@@ -80,15 +80,17 @@ API Documentation
     Return a list of meaningful words(matches the minimal length you've set) found from a string.
 
 
-Useful Links
+<h2>Useful Links</h2>
 ------------
 
 - `WordSegment @ Github`_
+- `Report Bugs`_
 
 .. _`Heuristic_Word_Finding @ Github`: https://github.com/eugenejw/Heuristic_Word_Finding
+.. _`Heuristic_Word_Finding @ Github`: https://github.com/eugenejw/Heuristic_Word_Finding/issues
 
 
-WordSegment License
+<h2>WordSegment License</h2>
 -------------------
 
 Copyright (c) 2015 Weihan Jiang
