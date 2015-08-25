@@ -143,7 +143,7 @@ class ConstructCorpus(object):
 
         return ngram_tree
 
-class WordFiner(object):
+class WordFinder(object):
     '''
     class that provides the following two fuctions,
     1. Finds whether a string contains any meaningful word,
@@ -250,3 +250,10 @@ class WordFiner(object):
                     meaningful_words.append(word)
 
         return meaningful_words
+
+__title__ = 'English Word Finder'
+__version__ = '0.1'
+__build__ = 0x0003
+__author__ = 'Weihan Jiang'
+__license__ = 'Apache 2.0'
+__copyright__ = 'Copyright (c) 2015 Weihan Jiang'

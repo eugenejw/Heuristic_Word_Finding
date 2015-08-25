@@ -4,7 +4,7 @@ import sys
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
-import wordsegment
+import wordfinder
 
 class Tox(TestCommand):
     def finalize_options(self):
@@ -24,16 +24,16 @@ with open('LICENSE') as fptr:
 
 setup(
     name='wordfinder',
-    version=heuristicwordfinder.__version__,
+    version=wordfinder.__version__,
     description='Find English word from string.',
     long_description=readme,
     author='Weihan Jiang',
     author_email='weihan.github@gmail.com',
     url='https://github.com/eugenejw/Heuristic_Word_Finding',
     license=license,
-    py_modules=['wordfind'],
-    packages=['wordsegment_data'],
-    package_data={'wordsegment_data': ['*.txt']},
+    py_modules=['wordfinder'],
+    packages=['corpus'],
+    package_data={'corpus': ['*.txt']},
     tests_require=['tox'],
     cmdclass={'test': Tox},
     platforms='any',
