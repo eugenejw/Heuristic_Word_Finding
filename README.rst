@@ -47,24 +47,30 @@ So any word found in the truncated corpus will be deemed as meaningful.
 
 Installing wordfinder is simple with <a href="https://pip.pypa.io/en/stable/">pip</a>
 
-    <code>>>> pip install wordfinder</code>
+    <code>
+    >>> pip install wordfinder
+    </code>
 
 In your own Python programs, you'll mostly want to use *search* to query
 whether a string contains any meaningful words whose length >= N(set by user).
 True is returned if found.
 
-    <code>#import
+    <code>
+    #import
     >>> from wordfinder import WordFinder
     #instantiation. At the instantiating time, the minimal word length is set.
     >>> wf = WordFinder(5)
     #start to search whether word with len(word)>=5 is in the given string.
     >>> wf.search("afqwerfqvqervqtrehghqehelloworldasfsvsdv sfaqsdf")
-    True</code>
+    >>> True
+    </code>
 
 Additonally, you could use *get* to get all meaningful words from a string.
 
-    <code>>>> wf.get("asdsdgfuierhghelloafsdjkasjdf@#$#sdfsuniversityadfsaof*washington")
-    ['university', 'washing', 'washington', 'hello', 'ashing']</code>
+    <code>
+    >>> wf.get("asdsdgfuierhghelloafsdjkasjdf@#$#sdfsuniversityadfsaof*washington")
+    >>> ['university', 'washing', 'washington', 'hello', 'ashing']
+    </code>
 
 
 <h2>API Documentation</h2>
