@@ -6,21 +6,31 @@ English Word Segmentation in Python
 
 WordFinder is an Apache2 licensed module for English word finding from a string, written
 in pure-Python, and based on a trillion-word corpus.
+Word Finding is the process of find meaningful word(s)(whose len(word)>=N, set by user), from a string(with unlimited length).
 
-Based on code from the chapter "`Natural Language Corpus Data`_" by Peter Norvig
+Maybe the hardest part of find meaningful words is to do the job wisely rather than costing O(n^2).
+
+In this WordFinder module, a heuristic way has been adopted to reduce the complexity from O(n^2) to O(n).
+
+The heuristic falvor is built on top of  enchant English dictionary together with Google unigram word corpus.
+
+Using the corpus was inspired by the chapter "`Natural Language Corpus Data`_" by Peter Norvig,
 from the book "`Beautiful Data`_" (Segaran and Hammerbacher, 2009).
-
 Data files are derived from the `Google Web Trillion Word Corpus`_, as described
 by Thorsten Brants and Alex Franz, and `distributed`_ by the Linguistic Data
 Consortium. This module contains only a subset of that data. The unigram data
-includes only the most common 333,000 words. Similarly, bigram data includes
-only the most common 250,000 phrases. Every word and phrase is lowercased with
-punctuation removed.
+includes only the most common 333,000 words. 
+Every word and phrase is lowercased with punctuation removed.
+
+I've further truncated the corpus by removing all non-dictionary words(words not found in enchant English Dic).
+The dictionary I used to truncate it, is Python Enchant Dictionary.
+So any word found in the truncated corpus will be deemed as meaningful.
 
 .. _`Natural Language Corpus Data`: http://norvig.com/ngrams/
 .. _`Beautiful Data`: http://oreilly.com/catalog/9780596157111/
 .. _`Google Web Trillion Word Corpus`: http://googleresearch.blogspot.com/2006/08/all-our-n-gram-are-belong-to-you.html
 .. _`distributed`: https://catalog.ldc.upenn.edu/LDC2006T13
+.. _`Python enchant`: https://pypi.python.org/pypi/pyenchant/
 
 Features
 --------
@@ -36,7 +46,7 @@ Features
 User Guide
 ----------
 
-Installing WordSegment is simple with
+Installing wordfinder is simple with
 `pip <http://www.pip-installer.org/>`_::
 
     > pip install wordfinder
