@@ -10,16 +10,16 @@ It provides two interfaces,
 1. find whether a string contains meaningful word,
    if found, terminate the search, and return True.
 
->>> from heuristic_word_finding import WordFind
->>> query = WordFind(5)
->>> query.search("afwsfjacertificatequwr        legalehgfq#$rehgqu^^niver352")
+>>> from wordfinder import WordFind
+>>> wf = WordFind(5)
+>>> wf.search("afwsfjacertificatequwr        legalehgfq#$rehgqu^^niver352")
 True
 
 2. find all meaningful words, whose len(word)>= N, from the string.
    If found, return word(s) found in a list.
->>> from heuristic_word_finding import WordFind
->>> query = WordFind(5)
->>> query.get("afwsfjacertificatequwr   legalehgfq#$rehgqu^^niver352")
+>>> from wordfinder import WordFind
+>>> wf = WordFind(5)
+>>> wf.get("afwsfjacertificatequwr   legalehgfq#$rehgqu^^niver352")
 ['legal', 'certificate']
 
 In the code, a modified version of  corpus containing 1024908267229 total
@@ -206,12 +206,12 @@ class WordFinder(object):
         candidate_list.sort(reverse=True)
         for each in candidate_list:
             if each[1] in self.ngram_tree[each[1]]:
-                print "Found: {}".format(each[1])
+                print ("Found: {}").format(each[1])
                 return FOUND
             else:
                 for word in self.ngram_tree[each[1]]:
                     if word in each[1] + pair_dic[each[1]]:
-                        print "Found: {}".format(word)
+                        print ("Found: {}").format(word)
                         return FOUND
 
         return NOT_FOUND
@@ -246,7 +246,6 @@ class WordFinder(object):
         for each in candidate_list:
             for word in self.ngram_tree[each[1]]:
                 if word in each[1] + pair_dic[each[1]]:
-#                    print "{} found".format(word)
                     meaningful_words.append(word)
 
         return meaningful_words
