@@ -17,7 +17,12 @@ class Tox(TestCommand):
         sys.exit(errno)
 
 with open('README.rst') as fptr:
-    readme = fptr.read()
+     readme = fptr.read()
+
+with open('README.html') as fptr:
+     readme_html = fptr.read()
+
+
 
 with open('LICENSE') as fptr:
     license = fptr.read()
@@ -26,7 +31,7 @@ setup(
     name='wordfinder',
     version=wordfinder.__version__,
     description='Find English word from string.',
-    long_description=readme,
+    long_description=readme_html,
     author='Weihan Jiang',
     author_email='weihan.github@gmail.com',
     url='https://github.com/eugenejw/Heuristic_Word_Finding',

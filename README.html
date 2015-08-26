@@ -31,7 +31,7 @@ So any word found in the truncated corpus will be deemed as meaningful.
 .. _`distributed`: https://catalog.ldc.upenn.edu/LDC2006T13
 .. _`Python enchant`: https://pypi.python.org/pypi/pyenchant/
 
-Features
+<h2>Features</h2>
 --------
 
 - Pure-Python
@@ -42,17 +42,20 @@ Features
 - Developed on Python 2.7
 - Tested on CPython 2.7 and 3.4
 
-User Guide
+<h2>User Guide</h2>
 ----------
 
-Installing wordfinder is simple with pip
+Installing wordfinder is simple with <a href="https://pip.pypa.io/en/stable/">pip</a>
 
+    <code>
     >>> pip install wordfinder
+    </code>
 
 In your own Python programs, you'll mostly want to use *search* to query
 whether a string contains any meaningful words whose length >= N(set by user).
 True is returned if found.
 
+    <code>
     #import
     >>> from wordfinder import WordFinder
     #instantiation. At the instantiating time, the minimal word length is set.
@@ -60,14 +63,17 @@ True is returned if found.
     #start to search whether word with len(word)>=5 is in the given string.
     >>> wf.search("afqwerfqvqervqtrehghqehelloworldasfsvsdv sfaqsdf")
     >>> True
+    </code>
 
 Additonally, you could use *get* to get all meaningful words from a string.
 
+    <code>
     >>> wf.get("asdsdgfuierhghelloafsdjkasjdf@#$#sdfsuniversityadfsaof*washington")
     >>> ['university', 'washing', 'washington', 'hello', 'ashing']
+    </code>
 
 
-API Documentation
+<h2>API Documentation</h2>
 -----------------
 
 - search(text)
@@ -80,18 +86,14 @@ API Documentation
     Return a list of meaningful words(matches the minimal length you've set) found from a string.
 
 
-Useful Links
+<h2>Useful Links</h2>
 ------------
 
-- `Heuristic_Word_Finder @ Github`_
-- `Issue Tracker`_
+<a href="https://github.com/eugenejw/Heuristic_Word_Finding">Heuristic_Word_Finder @ Github</a>
+<a href="https://github.com/eugenejw/Heuristic_Word_Finding/issues">Issue Tracker</a>
 
-.. _`Heuristic_Word_Finding @ Github`: https://github.com/eugenejw/Heuristic_Word_Finding
-.. _`Heuristic_Word_Finding @ Github`: https://github.com/eugenejw/Heuristic_Word_Finding/issues
-
-
-License
--------
+<h2>WordSegment License</h2>
+-------------------
 
 Copyright (c) 2015 Weihan Jiang
 
