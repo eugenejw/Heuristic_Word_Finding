@@ -53,7 +53,7 @@ In your own Python programs, you'll mostly want to use *search* to query
 whether a string contains any meaningful words whose length >= N(set by user).
 True is returned if found.
 
-    #import
+
     >>> from wordfinder import WordFinder
     #instantiation. At the instantiating time, the minimal word length is set.
     >>> wf = WordFinder(5)
