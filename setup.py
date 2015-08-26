@@ -19,8 +19,8 @@ class Tox(TestCommand):
 with open('README.rst') as fptr:
      readme = fptr.read()
 
-with open('README.html') as fptr:
-     readme_html = fptr.read()
+with open('README_PYPI.rst') as fptr:
+     readme_pypi = fptr.read()
 
 
 
@@ -31,7 +31,7 @@ setup(
     name='wordfinder',
     version=wordfinder.__version__,
     description='Find English word from string.',
-    long_description=readme_html,
+    long_description=readme_pypi,
     author='Weihan Jiang',
     author_email='weihan.github@gmail.com',
     url='https://github.com/eugenejw/Heuristic_Word_Finding',

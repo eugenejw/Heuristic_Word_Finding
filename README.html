@@ -46,18 +46,23 @@ In your own Python programs, you'll mostly want to use *search* to query
 whether a string contains any meaningful words whose length >= N(set by user).
 True is returned if found.
     <code>
-    #import
     >>> from wordfinder import WordFinder
-    #instantiation. At the instantiating time, the minimal word length is set.
-    >>> wf = WordFinder(5)
+    #instantiate and set the minimal word length(in this example, 5)
+    >>> wf_5 = WordFinder(5)
     #start to search whether word with len(word)>=5 is in the given string.
-    >>> wf.search("afqwerfqvqervqtrehghqehelloworldasfsvsdv sfaqsdf")
-    >>> True
+    >>> wf_5.search("afqwerfqvqervqtrehghqehelloworldasfsvsdv sfaqsdf")
+    True
+    #instanciation is no longer needed for another len(word)>=5 search
+    >>> wf_5.search("jfqsdfauniversityregqwvqedfqrewgfqgweijfq")
+    #you can create another instance for len(word)>=6
+    >>> wf_6 = WordFinder(6)
+    >>> wf_6.search("jfqsdfauniversityregqwvqedfqrewgfqgweijfq")
+    True
     </code>
 Additonally, you could use *get* to get all meaningful words from a string.
     <code>
-    >>> wf.get("asdsdgfuierhghelloafsdjkasjdf@#$#sdfsuniversityadfsaof*washington")
-    >>> ['university', 'washing', 'washington', 'hello', 'ashing']
+    >>> wf_5.get("asdsdgfuierhghelloafsdjkasjdf@#$#sdfsuniversityadfsaof*washington")
+    ['university', 'washing', 'washington', 'hello', 'ashing']
     </code>
 <h2>API Documentation</h2>
 -search(text)
