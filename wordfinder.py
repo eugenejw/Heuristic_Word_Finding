@@ -45,6 +45,10 @@ Original Copyright (c) 2008-2009 by Peter Norvig
 
 import sys
 from os.path import join, dirname, realpath
+from operator import itemgetter
+from itertools import groupby
+
+
 
 FOUND = True
 NOT_FOUND = False
@@ -220,6 +224,8 @@ class WordFinder(object):
     def get(self, text):
         '''
         Public interface for user to find all meaningful words in a string.
+        Input: string
+        Return: a set of meaningful English words found
         '''
         if self._casesensitive == False:
             self._string = text.lower()
@@ -248,7 +254,140 @@ class WordFinder(object):
                 if word in each[1] + pair_dic[each[1]]:
                     meaningful_words.append(word)
 
-        return meaningful_words
+        return set(meaningful_words)
+
+class WordSegment(object):
+    '''
+    class that provides the following two fuctions,
+    1. Finds whether a string contains any meaningful word,
+       that is more than <minimal length> characters.
+       If found, return True.
+    2. Finds all meaningful words in a string.
+    '''
+
+    def __init__(self, min_length=2, casesensitive=False):
+        self._minlen = min_length
+        self._string = ''
+        self._casesensitive = casesensitive
+        corpus = ConstructCorpus(self._minlen)
+        self.ngram_distribution = corpus.ngram_distribution
+        self.ngram_tree = corpus.ngram_tree
+
+    def _divide(self):
+        """
+        Iterator finds ngrams(with its position in string) and their suffix.
+        An example input of string "helloworld" yields the following tuples,
+        (('hello',(0,5)), 'world')
+        (('ellow',(1,6)), 'orld')
+        (('llowo',(2,7)), 'rld')
+        (('lowor',(3,8)), 'ld')
+        (('oworl',(4,9)), 'd')
+        (('world',(5,10)), '')
+        """
+        counter = 0
+        for cut_point in range(self._minlen, len(self._string)+1):
+            yield ((self._string[counter:cut_point],(counter, counter+self._minlen)), self._string[cut_point:])
+            counter += 1
+
+    #public interface I
+    def search(self, text):
+        '''
+        Public interface,
+        for user to query whether a string contains meaningful
+        word whose len(word) >= minlen(set in initial phase of the class)
+        '''
+        if self._casesensitive == False:
+            self._string = text.lower()
+        else:
+            pass #for current version, only support lowercase version
+
+        temp_dic = dict()
+        candidate_list = []
+        pair_dic = dict()
+        for prefix, suffix in self._divide():
+            pair_dic[prefix] = suffix
+            if prefix in self.ngram_distribution:
+                temp_dic[prefix] = self.ngram_distribution[prefix]
+                candidate_list.append((self.ngram_distribution[prefix], prefix))
+            else:
+                #means this prefix was not likely
+                #to be a part of meaningful word.
+                pass
+
+        candidate_list.sort(reverse=True)
+        for each in candidate_list:
+            if each[1] in self.ngram_tree[each[1]]:
+#                print ("Found: {}").format(each[1])
+                return FOUND
+            else:
+                for word in self.ngram_tree[each[1]]:
+                    if word in each[1] + pair_dic[each[1]]:
+#                        print ("Found: {}").format(word)
+                        return FOUND
+
+        return NOT_FOUND
+
+    def _intersect(self, tuple_0, tuple_1):
+        '''
+        finds intersection of two words
+        '''
+        x = range(tuple_0[0],tuple_0[1])
+        y = range(tuple_1[0],tuple_1[1])
+        xs = set(x)
+        return xs.intersection(y)
+        
+    def _group(self, meaningful_words):
+        #[((0,5), "hello"),((0,10), "helloword"),...]
+        for each in meaningful_words:
+            
+        pos_list = 
+        for k, g in groupby(enumerate(data), lambda (i,x):i-x):
+            print map(itemgetter(1), g)
+
+
+    #public interface II
+    def segment(self, text):
+        '''
+        Public interface for user to find all meaningful words in a string.
+        Input: string
+        Return: a set of meaningful English words found
+        '''
+        if self._casesensitive == False:
+            self._string = text.lower()
+        else:
+            pass #for current version, only support lowercase version
+
+#        temp_dic = dict()
+        candidate_list = []
+        pair_dic = dict()
+        for prefix, suffix in self._divide():
+            #prefix is ("hello",(0,5))
+            pair_dic[prefix] = suffix
+            if prefix[0] in self.ngram_distribution:
+                #temp_dic[prefix] = self.ngram_distribution[prefix]
+                candidate_list.append(
+                    (self.ngram_distribution[prefix[0]], prefix)
+                )
+            else:
+                #means this prefix was not likely
+                #to be a part of meaningful word
+                pass
+
+        candidate_list.sort(reverse=True)
+        #now candidate list is [(2345234, ("hello",(0,5)))]
+        meaningful_words = []
+        #meaningful_words is [((0, 10),"helloworld"),...]
+        for each in candidate_list:
+            for word in self.ngram_tree[each[1][0]]:
+                if word in each[1][0] + pair_dic[each[1][0]]:
+                    meaningful_words.append((each[1][1][0], each[1][1][0]+len(word)), word)
+                    
+        #sort the list in order of position in original text
+        meaningful_words.sort()
+        #the sorted list is [((0,5), "hello"),((0,10), "helloword"),...]
+
+        return set(meaningful_words)
+
 
 __title__ = 'English Word Finder'
 __version__ = '0.150'
