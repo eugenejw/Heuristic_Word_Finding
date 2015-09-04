@@ -47,8 +47,9 @@ import sys
 from os.path import join, dirname, realpath
 from operator import itemgetter
 from itertools import groupby
-
-
+import networkx as nx
+from wordsegment import segment
+from itertools import groupby, count
 
 FOUND = True
 NOT_FOUND = False
@@ -63,6 +64,11 @@ def parse_file(filename):
     with open(filename) as fptr:
         lines = (line.split('\t') for line in fptr)
         return dict((word, float(number)) for word, number in lines)
+
+def as_range(g):
+    l = list(g)
+    return l[0], l[-1]
+
 
 class Data(object):
     '''
@@ -298,6 +304,7 @@ class WordSegment(object):
         xs = set(x)
         return xs.intersection(y)
         
+    '''
     def _group(self, meaningful_words):
         #[((0,5), "hello"),((0,10), "helloword"),...]
         for each in meaningful_words:
@@ -305,8 +312,9 @@ class WordSegment(object):
         pos_list = 
         for k, g in groupby(enumerate(data), lambda (i,x):i-x):
             print map(itemgetter(1), g)
+    '''
 
-    def _connected_components(neighbors):
+    def _connected_components(self, neighbors):
         seen = set()
         def component(node):
             nodes = set([node])
@@ -338,99 +346,47 @@ class WordSegment(object):
         #[((0, 3),"face"),((4, 6),"boo")]
         #input, list of nodes
         #return format (score, list of nodes)
+        pass
+        '''
         start_pos = node_list[0][0]  #0
         end_pos = node_list[-1][0]  #6
         original_string = self._string[start_pos:end_pos]
         
+        #prefer longer words
+        node_len = 0
         for each in node_list:
-            _intersect(self, original_string, each):
-            
-        if prev is None:
-        if word in unigram_counts:
-            # Probability of the given word.                                                                                                                                                                               
-            return unigram_counts[word] / 1024908267229.0
-        else:
-            # Penalize words not found in the unigrams according                                                                                                                                                                       
-            # to their length, a crucial heuristic.                                                                                                                                                                                    
-
-            return 10.0 / (1024908267229.0 * 10 ** len(word))
-    else:
-        bigram = '{0} {1}'.format(prev, word)
-
-        if bigram in bigram_counts and prev in unigram_counts:
-
-            # Conditional probability of the word given the previous                                                                                                                                                                   
-            # word. The technical name is *stupid backoff* and it's                                                                                                                                                                    
-            # not a probability distribution but it works well in                                                                                                                                                                      
-            # practice.                                                                                                                                                                                                                
-
-            return bigram_counts[bigram] / 1024908267229.0 / score(prev)
-        else:
-            # Fall back to using the unigram probability.                                                                                                                                                                              
-
-            return score(word)
-        pass
-
-    def _component_optimalize(self, components):
-        
-        optimalized_components = []
-        for component in components:
-            if len(component.nodes()) == 1:
-               #means the component contains only one word
-               optimalized_components.append((component.nodes()[0][0][0], component.nodes()[0][0][1])) #("pos, "word")
-               continue
-
-            def get_optimal_words(self, component):
-                '''
-                return a list of optimal words in format of (pos, "word")
-                '''
-                nodes = component.nodes() #initially nodes = all nodes in component
-
-                def search(component, nodes, node='init'):
-                    if not nx.non_neighbors(component, node) and node != 'init':
-                        return _score([node])
-                    elif nx.non_neighbors(component, node) and node != 'init':
-                        #only look at word forwad
-                        flag = True
-                        for each in nx.non_neighbors(component, node):
-                            if each[0][0] > node[0][0]:
-                                pass
-                            else:
-                                flag = False
-                        if flag = True:
-                            return _score([node])
-#                        return (component.nodes()[0][0][0], component.nodes()[0][0][1]) #("pos, "word")
-                
-                    def candidates():
-                        for node in nodes.sort():
-                            #node, say, ((0, 3),"face")
-                            candidate_nodes = _score([node])
-                            for each_non_neighbor in non_neighbors(component, node):
-
-                                #boo is one of the non_neighbors of "face"
-                                candidate_nodes.append(search(component, each_non_neighbor, each_non_neighbor))
-                                #booking, no further non_neighbors, so will return a node itself
-                                #boo, has two non_neighbors -- "king" and "girl", will return the 
-                                
-                                yield sscore(candidate_nodes)
-                                #yield (score, [list of nodes])
-
-                    return max(candidates())
-
-                optimized_words = search(component, [],'init') #in format of (pos, "word1xxword2..")
-                return optimized_words
-
-            optimalized_components.append(get_optimal_words(self,component))
-        return optimalized_components    
-
+            node_len += len(each[1])
+        ave_word_len = float(node_len/len(node_list))
+        '''
+    
 
     def _find_components(self, meaningful_words):
         #[((0, 3),"face"), ((0, 7),"facebook"),((1, 3),"ace"), ((4, 6),"boo"), ((4, 7),"book"), ((6, 7), "ok"), ((8, 19),"anotherword")]
         G = nx.Graph()
-        G = _init_graph(self, meaningful_words)
+        G = self._init_graph(meaningful_words)
         components = []
-        components = list(nx.connected_component_subgraphs(G)
+        components = list(nx.connected_component_subgraphs(G))
         return components
+
+    def _component_optimizing(self,component):
+        start_pos_lst = []
+        end_pos_lst = []
+        segment_word_lst = []
+        candidate_lst = []
+        for each in component:
+            start_pos_lst.append(each[0][0])
+            end_pos_lst.append(each[0][1])
+        start_pos = min(start_pos_lst)
+        end_pos = max(end_pos_lst)
+        original_word = self._string[start_pos:end_pos]
+        segment_word_lst = segment(original_word)
+        if len(segment_word_lst[0]) == 1:
+            start_pos += 1
+            segment_word_lst.pop(0)
+            return ((start_pos, end_pos), segment_word_lst)
+        else:
+            return ((start_pos, end_pos), segment_word_lst)
+            
 
     #public interface II
     def segment(self, text):
@@ -441,6 +397,7 @@ class WordSegment(object):
         '''
         if self._casesensitive == False:
             self._string = text.lower()
+            self._string = self._string.strip("'")
         else:
             pass #for current version, only support lowercase version
 
@@ -448,6 +405,7 @@ class WordSegment(object):
         candidate_list = []
         pair_dic = dict()
         for prefix, suffix in self._divide():
+            #yield ((self._string[counter:cut_point],(counter, counter+self._minlen)), self._string[cut_point:])
             #prefix is ("hello",(0,5))
             pair_dic[prefix] = suffix
             if prefix[0] in self.ngram_distribution:
@@ -465,85 +423,73 @@ class WordSegment(object):
         meaningful_words = []
         #meaningful_words is [((0, 10),"helloworld"),...]
         for each in candidate_list:
+            #(17507324569.0, ('in', (8, 10)))
             for word in self.ngram_tree[each[1][0]]:
-                if word in each[1][0] + pair_dic[each[1][0]]:
-                    meaningful_words.append((each[1][1][0], each[1][1][0]+len(word)), word)
+                if word in each[1][0] + pair_dic[each[1]]:
+                    meaningful_words.append(((each[1][1][0], each[1][1][0]+len(word)), word))
                     
         #sort the list in order of position in original text
         meaningful_words.sort()
         #the sorted list is [((0,5), "hello"),((0,10), "helloword"),...]
-        components = _find_components(meaningful_words)
+        components = []
+        components = self._find_components(meaningful_words)
+        for each in components:
+            temp_lst = each.nodes()
+            temp_lst.sort()
+            print "component: {}\n".format(temp_lst)
+        
+        post_components = []
+        for each in components:
+            post_components.append(self._component_optimizing(each))
+            #returns ((start_pos, end_pos), segment_word_lst)
+
+        
+        meaningful_pos_lst = []
+        for each in post_components:
+            print "post_component: {}\n".format(each)
+            meaningful_pos_lst += range(each[0][0], each[0][1])
+
+        non_meaning_pos_lst = []
+        for x in xrange(len(self._string)):
+            if x in meaningful_pos_lst:
+                continue
+            else:
+                non_meaning_pos_lst.append(x)
+                
+        non_meaningful_range = []
+        non_meaningful_range = [as_range(g) for _, g in groupby(non_meaning_pos_lst, key=lambda n, c=count(): n-next(c))]
+        #[(8, 9), (12, 30)]
+
+        print "ono-meaningful list: {}\n".format(non_meaningful_range)
+        meaningful_dic = dict()
+
+        overall_pos_lst = []
+        for each in non_meaningful_range:
+            overall_pos_lst.append(each)
+        for component in post_components:
+            overall_pos_lst.append(component[0])
+            meaningful_dic[component[0]] = component[1]
+
+        overall_pos_lst.sort()
+        print overall_pos_lst
+        return_lst = []
+        for each in overall_pos_lst:
+            if each in meaningful_dic:
+                return_lst.extend(meaningful_dic[each])
+            else:
+                return_lst.append(self._string[each[0]:each[1]+1])
+
+        
+        print "RESULT: {}\n".format(return_lst)
+        
+
+        return True
         #[[((0, 3),"face"), ((0, 7),"facebook"),((1, 3),"ace"), ((4, 6),"boo"), ((4, 7),"book"), ((6, 7), "ok")],[((8, 19),"anotherword")]]
-        optimized_components = []
-        optimized_components = _component_optimize(self, components)    
+#        optimized_components = []
+#        optimized_components = _component_optimize(self, components)    
                 
         #replace the optimzed component result to the original str
-        return set(meaningful_words)
-
-                         
-    def _find_candidate(self, component):
-        temp_lst = []
-        candidate_lst = []
-        for each in component:
-            temp_lst.append(each[0][1])
-        original_word = self._string[min(component):max(temp_lst)]
-
-        top_down_candidates = []
-        #[((0, 3),"face"), ((0, 7),"facebook"),((1, 3),"ace"), ((4, 6),"boo"), ((4, 7),"book"), ((6, 7), "ok")]
-        #face boo
-        #face book
-        #face ok
-        #facebook
-        #ace boo
-        #ace book
-        #ace ok
-        #boo
-        #book
-        #ok
-        for each in component:
-            non_intersect_lst = []
-            for each_2 in component:
-                if self._intersect(each[0], each_2[0]):
-                    #if the last element of templst intersects with each2{0}
-                    pass
-                else:
-                    #no intersect
-                    non_intersect_lst.append(each_2)
-            #non_intersect_lst = [((4, 6),"boo"), ((4, 7),"book"), ((6, 7), "ok")]
-            for x in non_intersect_lst:
-                if self._intersect(each[0],x[0]):
-                    
-                    
-
-
-            each_length = each[0][1] - each[0][0] + 1
-            if each_length == len(original_word):
-                top_down_candidates.append(each)
-            
-            preffix = []
-            suffix = []
-            auto_fill_prefix = ''
-            for temp_each in component:
-                if temp_each[0][1]<each[0][0]:
-                    preffix.append(temp_each)
-                elif temp_each[0][0]>each[0][1]:
-                    suffix.append(temp_each)
-            if len(preffix)==0:
-                #means needs to fill with non-meaningful characters
-                auto_fill_prefix = original_word[0:each[0][0]]
-            else:
-                
-            
-
-
-
-
-
-
-
-
-            
-            
+#        return set(meaningful_words)
 
 
 __title__ = 'English Word Finder'
