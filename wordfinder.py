@@ -379,6 +379,11 @@ class WordSegment(object):
         start_pos = min(start_pos_lst)
         end_pos = max(end_pos_lst)
         original_word = self._string[start_pos:end_pos]
+        #if the component contains only one word
+        if len(component) == 1:
+            return ((start_pos, end_pos), [component[0][1]])
+        #if one of the words has len==component
+        
         segment_word_lst = segment(original_word)
         if len(segment_word_lst[0]) == 1:
             start_pos += 1
@@ -387,6 +392,9 @@ class WordSegment(object):
         else:
             return ((start_pos, end_pos), segment_word_lst)
             
+
+    def segment2(self, component):
+        pass
 
     #public interface II
     def segment(self, text):
@@ -460,7 +468,7 @@ class WordSegment(object):
         non_meaningful_range = [as_range(g) for _, g in groupby(non_meaning_pos_lst, key=lambda n, c=count(): n-next(c))]
         #[(8, 9), (12, 30)]
 
-        print "ono-meaningful list: {}\n".format(non_meaningful_range)
+        print "non-meaningful list: {}\n".format(non_meaningful_range)
         meaningful_dic = dict()
 
         overall_pos_lst = []
