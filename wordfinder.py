@@ -361,7 +361,89 @@ class WordSegment(object):
             node_len += len(each[1])
         ave_word_len = float(node_len/len(node_list))
         '''
-    
+
+    def _score_by_len(self, lst):
+        """Score a `word` in the context of the previous word, `prev`."""
+
+
+        words = []
+        score = 0
+        if isinstance(lst, tuple):
+            words = [lst[1]]
+        else:
+            for each in lst:
+                words.append(each[1])
+
+        print "words are {}\n".format(words)
+        for word in words:
+            if word in unigram_counts:
+                score = score + len(word)
+            else:
+                score = score + len(word)
+
+        return score
+
+
+    def score_by_prob(lst):
+        """Score a `word` in the context of the previous word, `prev`."""
+
+
+        words = []
+        score = 0
+        if isinstance(lst, tuple):
+            words = [lst[1]]
+        else:
+            for each in lst:
+                words.append(each[1])
+
+        print "words are {}\n".format(words)
+        for word in words:
+            if word in unigram_counts:
+                score = score + log10((unigram_counts[word] / 1024908267229.0))
+            else:
+                score = score +  log10((10.0 / (1024908267229.0 * 10 ** len(word))))
+
+        return score
+
+    def score1(self, lst):
+        """Score a `word` in the context of the previous word, `prev`."""
+
+
+        words = []
+        score = 0
+        for each in lst:
+                words.append(each[1])
+
+        print "words are {}\n".format(words)
+        for word in words:
+            if word in unigram_counts:
+                score = score + log10((unigram_counts[word] / 1024908267229.0))
+            else:
+                score = score +  log10((10.0 / (1024908267229.0 * 10 ** len(word))))
+
+        return score
+
+
+
+    def _max(self, lst):
+        print "debug: input list is {}".format(lst)
+        tmp_lst = []
+        for each in lst:
+            tmp_lst.append(each[0])
+
+        max_score = max(tmp_lst)
+
+        winners = []
+        for each in lst:
+            if each[0] == max_score:
+
+                winners.append((self.score1(each[1]), each[0], each[1]))
+
+        print winners
+        print "winner is {}".format(max(winners))
+        return (max(winners)[1], max(winners)[2])
+
+
 
     def _find_components(self, meaningful_words):
         #[((0, 3),"face"), ((0, 7),"facebook"),((1, 3),"ace"), ((4, 6),"boo"), ((4, 7),"book"), ((6, 7), "ok"), ((8, 19),"anotherword")]
@@ -420,6 +502,10 @@ class WordSegment(object):
         print "##################\n"
         print "start_pos: {}".format(start_pos)
         print "end_pos: {}".format(end_pos)
+        print "scored_candidate_list:"
+        for each in scored_candidate_list:
+            print each
+        '''
         penaltized_list = []
         for each in scored_candidate_list:
             #(0.00011509110207386408, [((1, 3), 'ac'), ((7, 11), 'king')])
@@ -429,15 +515,17 @@ class WordSegment(object):
         for each in penaltized_list:
             print "penalized candidare: {}".format(each)
 
-        print "MAX score is: {}\n".format(max(penaltized_list))
 
-#        segment_word_lst = self._segment(original_word)
-        if len(segment_word_lst[0]) == 1:
-            start_pos += 1
-            segment_word_lst.pop(0)
-            return ((start_pos, end_pos), segment_word_lst)
-        else:
-            return ((start_pos, end_pos), segment_word_lst)
+        '''
+        print "MAX score is: {}\n".format(self._max(scored_candidate_list))
+        #MAX score is: (9, [((4, 11), 'booking'), ((11, 13), 'ir')])
+        for each in self._max(scored_candidate_list)[1]:
+            segment_word_lst.append(each[1])
+
+#        if max(scored_candidate_list)[1][0][0] != start_pos:
+        start_pos = self._max(scored_candidate_list)[1][0][0][0]
+        end_pos = self._max(scored_candidate_list)[1][-1][0][1]
+        return ((start_pos, end_pos), segment_word_lst)
 
     def _score(self, lst):
         """Score a `word` in the context of the previous word, `prev`."""
@@ -469,13 +557,13 @@ class WordSegment(object):
             if len(lst) == 1 and not isinstance(lst[0], list):
                 print "returned {}\n".format(lst)
 
-                return (self._score(lst), lst)
+                return (self._score_by_len(lst), lst)
             for each in lst:
                 if isinstance(each, list):
                     flag = "LIST_FOUND"
             if flag == "ALL_NON_LIST":
                 print "returned {}\n".format(lst)
-                return (self._score(lst), lst)
+                return (self._score_by_len(lst), lst)
 
             def candidates():
                 leading_word = lst[0]
@@ -484,14 +572,14 @@ class WordSegment(object):
                 print "suffixing word is {}\n".format(suffix_words)
     #            for each in suffix_words:
     #                print each
-                leading_score = self._score(leading_word)
+                leading_score = self._score_by_len(leading_word)
                 for each in suffix_words:
                     print "working on word: {}\n".format(each)
                     suffix_score, suffix_list = search(each)
                     yield (leading_score + suffix_score, [leading_word] + suffix_list)
                     
 
-            return max(candidates())
+            return self._max(list(candidates()))
 
 
 
@@ -619,7 +707,8 @@ class WordSegment(object):
             #(17507324569.0, ('in', (8, 10)))
             for word in self.ngram_tree[each[1][0]]:
                 if word in each[1][0] + pair_dic[each[1]]:
-                    meaningful_words.append(((each[1][1][0], each[1][1][0]+len(word)), word))
+                    if self._string[each[1][1][0]:each[1][1][0]+len(word)] == word:
+                        meaningful_words.append(((each[1][1][0], each[1][1][0]+len(word)), word))
                     
         #sort the list in order of position in original text
         meaningful_words.sort()
@@ -679,7 +768,7 @@ class WordSegment(object):
         print "RESULT: {}\n".format(return_lst)
         
 
-        return True
+        return return_lst
         #[[((0, 3),"face"), ((0, 7),"facebook"),((1, 3),"ace"), ((4, 6),"boo"), ((4, 7),"book"), ((6, 7), "ok")],[((8, 19),"anotherword")]]
 #        optimized_components = []
 #        optimized_components = _component_optimize(self, components)    
