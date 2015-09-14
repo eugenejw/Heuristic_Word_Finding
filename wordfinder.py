@@ -443,6 +443,24 @@ class WordSegment(object):
         print "winner is {}".format(max(winners))
         return (max(winners)[1], max(winners)[2])
 
+    def _max_2(self, lst, start_pos, end_pos):
+        print "debug: input list is {}".format(lst)
+        tmp_lst = []
+        for each in lst:
+            tmp_lst.append(each[0])
+
+        max_score = max(tmp_lst)
+
+        winners = []
+        for each in lst:
+        #    if each[0] == max_score:
+               
+                winners.append((self.score1(each[1]) + self._penalize(each[1], start_pos, end_pos), each[0], each[1]))
+
+        print winners
+        print "winner is {}".format(max(winners))
+        return (max(winners)[1], max(winners)[2])
+
 
 
     def _find_components(self, meaningful_words):
@@ -456,21 +474,21 @@ class WordSegment(object):
     def _penalize(self, lst, start_pos, end_pos):
         #(0.00011509110207386408, [((1, 3), 'ac'), ((7, 11), 'king')])
         #(-8.483260969067402, [((1, 3), 'ac'), ((7, 11), 'king'), ((11, 13), 'ir')])
-        if not lst[1][0][0][0] - start_pos == 0:
-            starting_pos_penalty = log10(10.0 / (1024908267229.0 * 10 ** (lst[1][0][0][0] - start_pos)))
+        if not lst[0][0][0] - start_pos == 0:
+            starting_pos_penalty = log10(10.0 / (1024908267229.0 * 10 ** (lst[0][0][0] - start_pos)))
         else:
             starting_pos_penalty = 0
 
-        if not end_pos - lst[1][-1][0][1] == 0:
-            ending_pos_penalty = log10(10.0 / (1024908267229.0 * 10 ** (end_pos - lst[1][-1][0][1])))
+        if not end_pos - lst[-1][0][1] == 0:
+            ending_pos_penalty = log10(10.0 / (1024908267229.0 * 10 ** (end_pos - lst[-1][0][1])))
         else:
             ending_pos_penalty = 0
 
         interval_penalty = [0]
-        count = len(lst[1])
+        count = len(lst)
         for i in xrange(count-1):
-            if not lst[1][i+1][0][0] - lst[1][i][0][1] == 0:
-                interval_penalty.append(log10(10.0 / (1024908267229.0 * 10 ** (lst[1][i+1][0][0] - lst[1][i][0][1]))))
+            if not lst[i+1][0][0] - lst[i][0][1] == 0:
+                interval_penalty.append(log10(10.0 / (1024908267229.0 * 10 ** (lst[i+1][0][0] - lst[i][0][1]))))
         return sum(interval_penalty) + starting_pos_penalty + ending_pos_penalty
             
             
@@ -517,14 +535,14 @@ class WordSegment(object):
 
 
         '''
-        print "MAX score is: {}\n".format(self._max(scored_candidate_list))
+        print "MAX score is: {}\n".format(self._max_2(scored_candidate_list, start_pos, end_pos))
         #MAX score is: (9, [((4, 11), 'booking'), ((11, 13), 'ir')])
-        for each in self._max(scored_candidate_list)[1]:
+        for each in self._max_2(scored_candidate_list, start_pos, end_pos)[1]:
             segment_word_lst.append(each[1])
 
 #        if max(scored_candidate_list)[1][0][0] != start_pos:
-        start_pos = self._max(scored_candidate_list)[1][0][0][0]
-        end_pos = self._max(scored_candidate_list)[1][-1][0][1]
+        start_pos = self._max_2(scored_candidate_list, start_pos, end_pos)[1][0][0][0]
+        end_pos = self._max_2(scored_candidate_list, start_pos, end_pos)[1][-1][0][1]
         return ((start_pos, end_pos), segment_word_lst)
 
     def _score(self, lst):
