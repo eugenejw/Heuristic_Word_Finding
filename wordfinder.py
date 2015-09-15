@@ -440,7 +440,7 @@ class WordSegment(object):
                 winners.append((self.score1(each[1]), each[0], each[1]))
 
         print winners
-        print "winner is {}".format(max(winners))
+        print "_max:winner is {}".format(max(winners))
         return (max(winners)[1], max(winners)[2])
 
     def _max_2(self, lst, start_pos, end_pos):
@@ -458,7 +458,7 @@ class WordSegment(object):
                 winners.append((self.score1(each[1]) + self._penalize(each[1], start_pos, end_pos), each[0], each[1]))
 
         print winners
-        print "winner is {}".format(max(winners))
+        print "_max_2:winner is {}".format(max(winners))
         return (max(winners)[1], max(winners)[2])
 
 
@@ -535,14 +535,19 @@ class WordSegment(object):
 
 
         '''
-        print "MAX score is: {}\n".format(self._max_2(scored_candidate_list, start_pos, end_pos))
+        
+#        print "MAX score is: {}\n".format(self._max_2(scored_candidate_list, start_pos, end_pos))
         #MAX score is: (9, [((4, 11), 'booking'), ((11, 13), 'ir')])
-        for each in self._max_2(scored_candidate_list, start_pos, end_pos)[1]:
+        scored_candidate_list.sort(reverse=True)
+        max_3_list = scored_candidate_list[:3]
+        max_result = []
+        max_result = self._max_2(max_3_list, start_pos, end_pos)
+        for each in max_result[1]:
             segment_word_lst.append(each[1])
 
 #        if max(scored_candidate_list)[1][0][0] != start_pos:
-        start_pos = self._max_2(scored_candidate_list, start_pos, end_pos)[1][0][0][0]
-        end_pos = self._max_2(scored_candidate_list, start_pos, end_pos)[1][-1][0][1]
+        start_pos = max_result[1][0][0][0]
+        end_pos = max_result[1][-1][0][1]
         return ((start_pos, end_pos), segment_word_lst)
 
     def _score(self, lst):
