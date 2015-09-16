@@ -592,11 +592,16 @@ class WordSegment(object):
                 leading_word = lst[0]
                 print "leading word is {}\n".format(leading_word)
                 suffix_words = lst[1:][0]
-                print "suffixing word is {}\n".format(suffix_words)
+                dedup_suffix_words = []
+                for i in suffix_words:
+                    if i not in dedup_suffix_words:
+                        dedup_suffix_words.append(i)
+
+                print "suffixing words are {}\n".format(dedup_suffix_words)
     #            for each in suffix_words:
     #                print each
                 leading_score = self._score_by_len(leading_word)
-                for each in suffix_words:
+                for each in dedup_suffix_words:
                     print "working on word: {}\n".format(each)
                     suffix_score, suffix_list = search(each)
                     yield (leading_score + suffix_score, [leading_word] + suffix_list)
@@ -657,9 +662,13 @@ class WordSegment(object):
 
                             if list(nx.non_neighbors(component, node)) != []:
                              for each_non_neighbor in nx.non_neighbors(component, node):
-                                candidate_nodes = [node]
 
-                                if each_non_neighbor[0][0] > node[0][0]:
+                                candidate_nodes = [node]
+                                
+
+
+
+                                if each_non_neighbor[0][0] == node[0][1]:
                                     print "each_non_neighbor is {}\n".format(each_non_neighbor)
                                 #boo is one of the non_neighbors of "face"
                                     candidate_nodes.append(search(component, [each_non_neighbor], each_non_neighbor, flag=''))
@@ -668,7 +677,7 @@ class WordSegment(object):
                                 yield candidate_nodes
                                 #yield (score, [list of nodes])
                             else:
-                                print "HHHHEEEERRRREEEE\n"
+                                print "NO NEIGHBOR WORD\n"
                                 candidate_nodes = [node]
                                 yield candidate_nodes
 
