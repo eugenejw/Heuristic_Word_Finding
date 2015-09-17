@@ -374,7 +374,7 @@ class WordSegment(object):
             for each in lst:
                 words.append(each[1])
 
-        print "words are {}\n".format(words)
+#        print "words are {}\n".format(words)
         for word in words:
             if word in unigram_counts:
                 score = score + len(word)
@@ -396,7 +396,7 @@ class WordSegment(object):
             for each in lst:
                 words.append(each[1])
 
-        print "words are {}\n".format(words)
+#        print "words are {}\n".format(words)
         for word in words:
             if word in unigram_counts:
                 score = score + log10((unigram_counts[word] / 1024908267229.0))
@@ -414,7 +414,7 @@ class WordSegment(object):
         for each in lst:
                 words.append(each[1])
 
-        print "words are {}\n".format(words)
+#        print "words are {}\n".format(words)
         for word in words:
             if word in unigram_counts:
                 score = score + log10((unigram_counts[word] / 1024908267229.0))
@@ -426,7 +426,7 @@ class WordSegment(object):
 
 
     def _max(self, lst):
-        print "debug: input list is {}".format(lst)
+#        print "debug: input list is {}".format(lst)
         tmp_lst = []
         for each in lst:
             tmp_lst.append(each[0])
@@ -439,12 +439,12 @@ class WordSegment(object):
 
                 winners.append((self.score1(each[1]), each[0], each[1]))
 
-        print winners
-        print "_max:winner is {}".format(max(winners))
+#        print winners
+#        print "_max:winner is {}".format(max(winners))
         return (max(winners)[1], max(winners)[2])
 
     def _max_2(self, lst, start_pos, end_pos):
-        print "debug: input list is {}".format(lst)
+#        print "debug: input list is {}".format(lst)
         tmp_lst = []
         for each in lst:
             tmp_lst.append(each[0])
@@ -457,8 +457,8 @@ class WordSegment(object):
                
                 winners.append((self.score1(each[1]) + self._penalize(each[1], start_pos, end_pos), each[0], each[1]))
 
-        print winners
-        print "_max_2:winner is {}".format(max(winners))
+#        print winners
+#        print "_max_2:winner is {}".format(max(winners))
         return (max(winners)[1], max(winners)[2])
 
 
@@ -508,7 +508,7 @@ class WordSegment(object):
         original_word = self._string[start_pos:end_pos]
         #if the component contains only one word
         if len(component) == 1:
-            print "debug: component is {}\n".format(component.nodes())
+#            print "debug: component is {}\n".format(component.nodes())
             return ((start_pos, end_pos), [component.nodes()[0][1]])
         #if one of the words has len==component
         candidate_list = []
@@ -516,13 +516,13 @@ class WordSegment(object):
         scored_candidate_list = []
         for each in candidate_list:
             scored_candidate_list.append(self._segment(each))
-            print self._segment(each)
-        print "##################\n"
-        print "start_pos: {}".format(start_pos)
-        print "end_pos: {}".format(end_pos)
-        print "scored_candidate_list:"
-        for each in scored_candidate_list:
-            print each
+#            print self._segment(each)
+#        print "##################\n"
+#        print "start_pos: {}".format(start_pos)
+#        print "end_pos: {}".format(end_pos)
+#        print "scored_candidate_list:"
+#        for each in scored_candidate_list:
+#            print each
         '''
         penaltized_list = []
         for each in scored_candidate_list:
@@ -562,7 +562,7 @@ class WordSegment(object):
             for each in lst:
                 words.append(each[1])
 
-        print "words are {}\n".format(words)
+#        print "words are {}\n".format(words)
         for word in words:
             if word in unigram_counts:
                 score = score + (unigram_counts[word] / 1024908267229.0)
@@ -573,36 +573,36 @@ class WordSegment(object):
 
     def _segment(self, lst):
         """return a list of words that is the best segmentation of 'text'"""
-        print "debug: lst is :{}\n".format(lst)
+#        print "debug: lst is :{}\n".format(lst)
         def search(lst):
 
             flag = "ALL_NON_LIST"
             if len(lst) == 1 and not isinstance(lst[0], list):
-                print "returned {}\n".format(lst)
+#                print "returned {}\n".format(lst)
 
                 return (self._score_by_len(lst), lst)
             for each in lst:
                 if isinstance(each, list):
                     flag = "LIST_FOUND"
             if flag == "ALL_NON_LIST":
-                print "returned {}\n".format(lst)
+#                print "returned {}\n".format(lst)
                 return (self._score_by_len(lst), lst)
 
             def candidates():
                 leading_word = lst[0]
-                print "leading word is {}\n".format(leading_word)
+#                print "leading word is {}\n".format(leading_word)
                 suffix_words = lst[1:][0]
                 dedup_suffix_words = []
                 for i in suffix_words:
                     if i not in dedup_suffix_words:
                         dedup_suffix_words.append(i)
 
-                print "suffixing words are {}\n".format(dedup_suffix_words)
+#                print "suffixing words are {}\n".format(dedup_suffix_words)
     #            for each in suffix_words:
     #                print each
                 leading_score = self._score_by_len(leading_word)
                 for each in dedup_suffix_words:
-                    print "working on word: {}\n".format(each)
+#                    print "working on word: {}\n".format(each)
                     suffix_score, suffix_list = search(each)
                     yield (leading_score + suffix_score, [leading_word] + suffix_list)
                     
@@ -617,10 +617,10 @@ class WordSegment(object):
     def opt(self, component):
         optimalized_components = []
         if True:
-            print "inside opt\n"
+#            print "inside opt\n"
             if len(component.nodes()) == 1:
                #means the component contains only one word
-               print "single compond: {}\n".format(component.nodes())
+#               print "single compond: {}\n".format(component.nodes())
                return True
 
 
@@ -628,11 +628,11 @@ class WordSegment(object):
     
             nodes = component.nodes() #initially nodes = all nodes in component
             nodes.sort()
-            print "nodes are {}\n".format(nodes)
+#            print "nodes are {}\n".format(nodes)
 
             def search(component, nodes=nodes, node=nodes[0], flag='init'):
                 if not nx.non_neighbors(component, node) and flag != 'init':
-                    print "no neighbor returned: {}".format([node])
+#                    print "no neighbor returned: {}".format([node])
                     return node
                 elif nx.non_neighbors(component, node) and flag != 'init':
                         #only look at word forwad
@@ -649,7 +649,7 @@ class WordSegment(object):
                             pass
 
                     if flag == "HASNOT":
-                        print "no forward neighbor returned: {}".format([node])
+#                        print "no forward neighbor returned: {}".format([node])
                         return node
                     else:
                         #means it has non_neighbor following it
@@ -657,7 +657,7 @@ class WordSegment(object):
                 
                 def candidates():
                     for node in nodes:
-                            print "node is {}\n".format(node)
+#                            print "node is {}\n".format(node)
                             #node, say, ((0, 3),"face")
 
                             if list(nx.non_neighbors(component, node)) != []:
@@ -669,7 +669,7 @@ class WordSegment(object):
 
 
                                 if each_non_neighbor[0][0] == node[0][1]:
-                                    print "each_non_neighbor is {}\n".format(each_non_neighbor)
+#                                    print "each_non_neighbor is {}\n".format(each_non_neighbor)
                                 #boo is one of the non_neighbors of "face"
                                     candidate_nodes.append(search(component, [each_non_neighbor], each_non_neighbor, flag=''))
                                 #booking, no further non_neighbors, so will return a node itself
@@ -677,24 +677,24 @@ class WordSegment(object):
                                 yield candidate_nodes
                                 #yield (score, [list of nodes])
                             else:
-                                print "NO NEIGHBOR WORD\n"
+#                                print "NO NEIGHBOR WORD\n"
                                 candidate_nodes = [node]
                                 yield candidate_nodes
 
                 return list(candidates())
 
             optimized_words = search(component) #in format of (pos, "word1xxword2..")
-            print "optimized_words is {}\n".format(optimized_words)
+#            print "optimized_words is {}\n".format(optimized_words)
             s = []
             for i in optimized_words:
                 if i not in s:
                     s.append(i)
-            print "s is {}".format(s)
+#            print "s is {}".format(s)
 
-            for each in s:
-                print "\n"
+#            for each in s:
+#                print "\n"
                 
-                print each
+#                print each
 
         return s
 
@@ -747,23 +747,23 @@ class WordSegment(object):
         #the sorted list is [((0,5), "hello"),((0,10), "helloword"),...]
         components = []
         components = self._find_components(meaningful_words)
-        print "debug: components are: {}\n".format(components)
+#        print "debug: components are: {}\n".format(components)
         for each in components:
             temp_lst = each.nodes()
             temp_lst.sort()
-            print "component: {}\n".format(temp_lst)
+#            print "component: {}\n".format(temp_lst)
         
 
         post_components = []
         for each in components:
-            print "debug: working on: {}\n".format(each.nodes())
+#            print "debug: working on: {}\n".format(each.nodes())
             post_components.append(self._component_optimizing(each))
             #returns ((start_pos, end_pos), segment_word_lst)
 
         
         meaningful_pos_lst = []
         for each in post_components:
-            print "post_component: {}\n".format(each)
+#            print "post_component: {}\n".format(each)
             meaningful_pos_lst += range(each[0][0], each[0][1])
 
         non_meaning_pos_lst = []
@@ -777,7 +777,7 @@ class WordSegment(object):
         non_meaningful_range = [as_range(g) for _, g in groupby(non_meaning_pos_lst, key=lambda n, c=count(): n-next(c))]
         #[(8, 9), (12, 30)]
 
-        print "non-meaningful list: {}\n".format(non_meaningful_range)
+#        print "non-meaningful list: {}\n".format(non_meaningful_range)
         meaningful_dic = dict()
 
         overall_pos_lst = []
@@ -788,7 +788,7 @@ class WordSegment(object):
             meaningful_dic[component[0]] = component[1]
 
         overall_pos_lst.sort()
-        print overall_pos_lst
+#        print overall_pos_lst
         return_lst = []
         for each in overall_pos_lst:
             if each in meaningful_dic:
@@ -797,7 +797,7 @@ class WordSegment(object):
                 return_lst.append(self._string[each[0]:each[1]+1])
 
         
-        print "RESULT: {}\n".format(return_lst)
+#        print "RESULT: {}\n".format(return_lst)
         
 
         return return_lst
