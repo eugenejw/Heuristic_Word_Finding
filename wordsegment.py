@@ -1,29 +1,125 @@
 # -*- coding: utf-8 -*-
 
 """
-English Word Heuristical Finder in Python
+English Word Heuristical Segmentation tool in Python
 
 Heuristical Word Finding is the process of find meaningful word(s), which
 contains at least N characters(len(word)>=N), from a string.
 
-It provides two interfaces,
-1. find whether a string contains meaningful word,
-   if found, terminate the search, and return True.
+It provides one public interface -- "segment",
 
->>> from wordfinder import WordFind
->>> wf = WordFind(5)
->>> wf.search("afwsfjacertificatequwr        legalehgfq#$rehgqu^^niver352")
-True
+>>> from wordsegment import WordSegment
+>>> ws = WordSegment()
+>>> ws.segment('facebookingirl')
+['facebook', 'in', 'girl']
 
-2. find all meaningful words, whose len(word)>= N, from the string.
-   If found, return word(s) found in a list.
->>> from wordfinder import WordFind
->>> wf = WordFind(5)
->>> wf.get("afwsfjacertificatequwr   legalehgfq#$rehgqu^^niver352")
-['legal', 'certificate']
+##################
+Segmentation Logic
+
+The algorithm takes the following step to do the segmentation.
+Let's use this example input,
+>>> ws.segment('facebook72847helloworld')
+['facebook', '72847', 'hello', 'world']
+
+1.the first step is to find all meaningful words(len>=2) from the input string.
+  in the example, the meaningful words are
+  "face, facebook, ace, boo, book, ok, hell, hello, low, world"
+
+2.then it creates a graph for the input string, and add all possible meaningful
+  words as nodes into the graph. each node is with the position of the word,
+  for example, a node is in form of struct like this ((0,4), 'face')
+
+3.for each node, the algorithm will find whether node intersects other, in terms of position.
+  If intersects, add edge between the two nodes.
+  for example, node ((0,4), 'face') intersects ((1,4), 'ace'), so they are linked.
+
+4.now the graph contains many components. in the example,
+  the components are "face, ace, facebook, ace, boo, book, ok", "hell, hello, low, world"
+
+5.segmentation algorithem will make decision on component-level.
+  for example, for component "face, ace, facebook, ace, boo, book, ok",
+  should we segment it as ['face', 'book'], or ['facebook'], or even
+  ['ace', 'book']? word-level unigram corpus from Google trillion corpus is used to do the scoring.
+
+6.after each component-level segmentation is made, we glue the component-level output with
+  non-meaningful characters in original string.
+  in our example, the non-meaningful characters are "72847"
+
+7.finally, the interace returns a list of segmentation. in our example, it is
+  ['facebook', '72847', 'hello', 'world']
+
+################
+Pros and Cons,
+comparing with  segment tool https://pypi.python.org/pypi/wordsegment/0.6.1
+
+1. accuracy when handling long urls.
+As shown below, the upper result what the old algorithm produces,
+it missed some very obvious words because of algorithm defects.
+
+>>> segment('sdfjqueueuhfgqerfhwqasfhelloworldsjdiofjqrjfoqerkf')
+['sdfjqueueuhfgqerfhwqasf', 'helloworld', 'sjdiofjqrjfoqerkf']
+
+>>> ws.segment('sdfjqueueuhfgqerfhwqasfhelloworldsjdiofjqrjfoqerkf')
+['sdfj', 'queue', 'uhf', 'gqerfhwq', 'as', 'f', 'hello', 'worlds', 'jdi', 'of', 'jqrjfoqerkf']
+
+
+another example could be
+
+The upper  algorithm fails to deal with string like above,
+while our algorithm could handle it properly.
+
+>>> segment('xkkopahelloworld43576983456')
+['x', 'kk', 'opahelloworld43576983456']
+
+>>> ws.segment('xkkopahelloworld43576983456')
+['xkkopa', 'hello', 'world', '43576983456']
+
+
+2. new algorithm will not prefer small fractions.
+
+As shown below, the old algorithm produces some meaningfulless fractions,
+
+the new algorithm does not.
+
+>>> segment('fjfgjsddevelopers')
+['fj', 'fg', 'jsd', 'developers']
+
+>>> ws.segment('fjfgjsddevelopers')
+['fjfgjsd', 'developers']
+
+
+##################################
+Performance for the our algorithm
+
+Alexa Mean(out of top 1 million): 0.00344653956482 s
+Alexa Median: 0.0026 s
+Alexa Standard Deviation: 0.00414564042867
+
+F1(Family 1, 1 million) Mean: 0.012299464851 s
+F1 Median: 0.0089 s
+F1 Standard Deviation: 0.026318170557
+
+F2 Mean(out of 200k): 0.00800411521876 s
+F2 Median: 0.0059 s
+F2 Standard Deviation: 0.0159249383211
+
+
+For Algorithm https://pypi.python.org/pypi/wordsegment/0.6.1
+Alexa Mean: 0.00156934240115 s
+Alexa Median: 0.0009 s
+Alexa Standard Deviation: 0.00379112385851
+
+F1 Mean: 0.0086756611575 s
+F1 Median: 0.0067 s
+F1 Standard Deviation: 0.0192146079067
+
+F2 Mean: 0.00403571021107 s
+F2 Median: 0.003 s
+F2 Standard Deviation: 0.0130515844687
+
 
 In the code, a modified version of  corpus containing 1024908267229 total
-number of words is used. 
+number of words is used.
 I've truncated the corpus by removing all non-dictionary words.
 The dictionary I used to truncate it is Python Enchant Dictionary.
 So any word found in the truncated corpus will be deemed as meaningful.
@@ -34,7 +130,7 @@ terminate earlier.
 The original version of the corpus  may be found at
 http://norvig.com/ngrams/ under the name count_1w.txt.
 
-# Copyright (c) 2015 by Weihan Jiang
+# Copyright (c) 2015 by Niara
 
 Original corpus is from the chapter "Natural Language Corpus Data"
 from the book "Beautiful Data" (Segaran and Hammerbacher, 2009)
@@ -45,7 +141,6 @@ Original Copyright (c) 2008-2009 by Peter Norvig
 
 import sys
 from os.path import join, dirname, realpath
-from operator import itemgetter
 from itertools import groupby
 import networkx as nx
 from itertools import groupby, count
@@ -65,12 +160,14 @@ def parse_file(filename):
         lines = (line.split('\t') for line in fptr)
         return dict((word, float(number)) for word, number in lines)
 
-def as_range(g):
-    l = list(g)
-    return l[0], l[-1]
+UNIGRAM_COUNTS = parse_file(join(dirname(realpath(__file__)), 'corpus', 'unigrams.txt'))
 
-unigram_counts = parse_file(join(dirname(realpath(__file__)), 'corpus', 'unigrams.txt'))
-
+def as_range(group):
+    '''
+    Global function returns range
+    '''
+    tmp_lst = list(group)
+    return tmp_lst[0], tmp_lst[-1]
 
 class Data(object):
     '''
@@ -82,8 +179,8 @@ class Data(object):
     def __init__(self):
         self._unigram_counts = dict()
         self._unigram_counts = parse_file(
-		join(dirname(realpath(__file__)), 'corpus', 'unigrams.txt')
-	)
+            join(dirname(realpath(__file__)), 'corpus', 'unigrams.txt')
+            )
 
     @property
     def data(self):
@@ -184,18 +281,20 @@ class WordSegment(object):
         """
         counter = 0
         for cut_point in range(self._minlen, len(self._string)+1):
-            yield ((self._string[counter:cut_point],(counter, counter+self._minlen)), self._string[cut_point:])
+            yield (
+                (self._string[counter:cut_point], (counter, counter+self._minlen)),
+                self._string[cut_point:]
+                )
             counter += 1
 
     def _intersect(self, tuple_0, tuple_1):
         '''
         finds intersection of two words
         '''
-        x = range(tuple_0[0],tuple_0[1])
-        y = range(tuple_1[0],tuple_1[1])
-        xs = set(x)
-        return xs.intersection(y)
-        
+        word1 = range(tuple_0[0], tuple_0[1])
+        word2 = range(tuple_1[0], tuple_1[1])
+        tmp_xs = set(word1)
+        return tmp_xs.intersection(word2)
 
     def _connected_components(self, neighbors):
         '''
@@ -216,8 +315,10 @@ class WordSegment(object):
     def _init_graph(self, meaningful_words):
         '''
         Create graph for each requesting string
+        #An example input is a list like this:
+        [((0, 3),"face"), ((0, 7),"facebook"),((1, 3),"ace"), ((4, 6),"boo"),
+        ((4, 7),"book"), ((6, 7), "ok"), ((8, 19),"anotherword")]
         '''
-        #An example input is a list like this: [((0, 3),"face"), ((0, 7),"facebook"),((1, 3),"ace"), ((4, 6),"boo"), ((4, 7),"book"), ((6, 7), "ok"), ((8, 19),"anotherword")]
         G = nx.Graph()
         G.add_nodes_from(meaningful_words)
         for each in meaningful_words:
@@ -230,7 +331,6 @@ class WordSegment(object):
                     else:
                         G.add_edge(each, each_2)
         return G
-    
 
     def _score_by_len(self, lst):
         """
@@ -248,7 +348,7 @@ class WordSegment(object):
 
         #print "words are {}\n".format(words)
         for word in words:
-            if word in unigram_counts:
+            if word in UNIGRAM_COUNTS:
                 score = score + len(word)
             else:
                 score = score + len(word)
@@ -265,12 +365,12 @@ class WordSegment(object):
         words = []
         score = 0
         for each in lst:
-                words.append(each[1])
+            words.append(each[1])
 
         #print "words are {}\n".format(words)
         for word in words:
-            if word in unigram_counts:
-                score = score + log10((unigram_counts[word] / 1024908267229.0))
+            if word in UNIGRAM_COUNTS:
+                score = score + log10((UNIGRAM_COUNTS[word] / 1024908267229.0))
             else:
                 score = score +  log10((10.0 / (1024908267229.0 * 10 ** len(word))))
 
@@ -305,11 +405,15 @@ class WordSegment(object):
         for each in lst:
             tmp_lst.append(each[0])
 
-        max_score = max(tmp_lst)
-
         winners = []
         for each in lst:
-            winners.append((self.score(each[1]) + self._penalize(each[1], start_pos, end_pos), each[0], each[1]))
+            winners.append(
+                (
+                    self.score(each[1]) + self._penalize(each[1], start_pos, end_pos),
+                    each[0],
+                    each[1]
+                    )
+                )
 
         #print winners
         #print "_max_2:winner is {}".format(max(winners))
@@ -321,11 +425,13 @@ class WordSegment(object):
         '''
         function that finds the components in the graph.
         each component represents overlaping words
-        for example, in the example below, except the word "anotherword", all rest words have at least one character contained in other words.
+        for example, in the example below, except the word "anotherword",
+        all rest words have at least one character contained in other words.
         They will become one component in the who string-level graph
 
+        Example input is a list like this: [((0, 3),"face"), ((0, 7),"facebook"), ((1, 3),"ace"),
+        ((4, 6),"boo"), ((4, 7),"book"), ((6, 7), "ok"), ((8, 19),"anotherword")]
         '''
-        #Example input is a list like this: [((0, 3),"face"), ((0, 7),"facebook"),((1, 3),"ace"), ((4, 6),"boo"), ((4, 7),"book"), ((6, 7), "ok"), ((8, 19),"anotherword")]
         G = nx.Graph()
         G = self._init_graph(meaningful_words)
         components = []
@@ -334,12 +440,14 @@ class WordSegment(object):
 
     def _penalize(self, lst, start_pos, end_pos):
         '''
-        function that penalizes the non-meaningful gaps
+        function that penalizes the non-meaningful intervals
         '''
         #(0.00011509110207386408, [((1, 3), 'ac'), ((7, 11), 'king')])
         #(-8.483260969067402, [((1, 3), 'ac'), ((7, 11), 'king'), ((11, 13), 'ir')])
         if not lst[0][0][0] - start_pos == 0:
-            starting_pos_penalty = log10(10.0 / (1024908267229.0 * 10 ** (lst[0][0][0] - start_pos)))
+            starting_pos_penalty = log10(
+                10.0 / (1024908267229.0 * 10 ** (lst[0][0][0] - start_pos))
+                )
         else:
             starting_pos_penalty = 0
 
@@ -349,32 +457,34 @@ class WordSegment(object):
             ending_pos_penalty = 0
 
         interval_penalty = [0]
-        count = len(lst)
-        for i in xrange(count-1):
+        node_count = len(lst)
+        for i in xrange(node_count-1):
             if not lst[i+1][0][0] - lst[i][0][1] == 0:
-                interval_penalty.append(log10(10.0 / (1024908267229.0 * 10 ** (lst[i+1][0][0] - lst[i][0][1]))))
+                interval_penalty.append(
+                    log10(10.0 / (1024908267229.0 * 10 ** (lst[i+1][0][0] - lst[i][0][1])))
+                    )
         return sum(interval_penalty) + starting_pos_penalty + ending_pos_penalty
 
-    def _component_optimizing(self,component):
+    def _component_optimizing(self, component):
         '''
         function that makes decision which words combination is the optimal one.
         for example, the component in the example below, what is the optimal word combination?
         "facebook"?
         or "face" + "book"?
         or even, "ace" + "book"
-        This function will give an answer
+        This function will give an answer.
+        example input is like: [((0, 3),"face"), ((0, 7),"facebook"), ((1, 3),"ace"),
+        ((4, 6),"boo"), ((4, 7),"book"), ((6, 7), "ok")]
         '''
-        #example input is like: [((0, 3),"face"), ((0, 7),"facebook"),((1, 3),"ace"), ((4, 6),"boo"), ((4, 7),"book"), ((6, 7), "ok")]
+
         start_pos_lst = []
         end_pos_lst = []
         segment_word_lst = []
-        candidate_lst = []
         for each in component:
             start_pos_lst.append(each[0][0])
             end_pos_lst.append(each[0][1])
         start_pos = min(start_pos_lst)
         end_pos = max(end_pos_lst)
-        original_word = self._string[start_pos:end_pos]
         #if the component contains only one word
         if len(component) == 1:
 #            print "debug: component is {}\n".format(component.nodes())
@@ -392,7 +502,6 @@ class WordSegment(object):
 #        print "scored_candidate_list:"
 #        for each in scored_candidate_list:
 #            print each
-        
 #        print "MAX score is: {}\n".format(self._max_2(scored_candidate_list, start_pos, end_pos))
         scored_candidate_list.sort(reverse=True)
         max_3_list = scored_candidate_list[:3]
@@ -409,7 +518,9 @@ class WordSegment(object):
         """return a list of words that is the best segmentation of 'text'"""
         #print "debug: lst is :{}\n".format(lst)
         def search(lst):
-
+            '''
+            recursive call
+            '''
             flag = "ALL_NON_LIST"
             if len(lst) == 1 and not isinstance(lst[0], list):
                 #print "returned {}\n".format(lst)
@@ -445,7 +556,6 @@ class WordSegment(object):
 
 
     def _optimizing(self, component):
-        optimalized_components = []
         if True:
 
             nodes = component.nodes() #initially nodes = all nodes in component
@@ -476,7 +586,7 @@ class WordSegment(object):
                     else:
                         #means it has non_neighbor following it
                         pass
-                
+
                 def candidates():
                     for node in nodes:
                         #print "node is {}\n".format(node)
@@ -486,8 +596,13 @@ class WordSegment(object):
 
                                 if each_non_neighbor[0][0] == node[0][1]:
                                     #print "each_non_neighbor is {}\n".format(each_non_neighbor)
-                                    candidate_nodes.append(search(component, [each_non_neighbor], each_non_neighbor, flag=''))
-                                    
+                                    candidate_nodes.append(
+                                        search(
+                                            component, [each_non_neighbor],
+                                            each_non_neighbor, flag=''
+                                            )
+                                        )
+
                                 yield candidate_nodes
 
                         else:
@@ -503,12 +618,6 @@ class WordSegment(object):
             for i in optimized_words:
                 if i not in s:
                     s.append(i)
-#            print "s is {}".format(s)
-
-#            for each in s:
-#                print "\n"
-                
-#                print each
 
         return s
 
@@ -525,7 +634,7 @@ class WordSegment(object):
             self._string = self._string.strip("'")
         else:
             #for current version, only supports lowercase version
-            pass 
+            pass
 
         candidate_list = []
         pair_dic = dict()
@@ -550,7 +659,6 @@ class WordSegment(object):
                 if word in each[1][0] + pair_dic[each[1]]:
                     if self._string[each[1][1][0]:each[1][1][0]+len(word)] == word:
                         meaningful_words.append(((each[1][1][0], each[1][1][0]+len(word)), word))
-                    
         #sort the list in order of position in original text
         meaningful_words.sort()
         #the sorted list is [((0,5), "hello"),((0,10), "helloword"),...]
@@ -561,27 +669,28 @@ class WordSegment(object):
             temp_lst = each.nodes()
             temp_lst.sort()
         #print "component: {}\n".format(temp_lst)
-        
 
         post_components = []
         for each in components:
             #print "debug: working on: {}\n".format(each.nodes())
             post_components.append(self._component_optimizing(each))
-        
+
         meaningful_pos_lst = []
         for each in post_components:
             #print "post_component: {}\n".format(each)
             meaningful_pos_lst += range(each[0][0], each[0][1])
 
         non_meaning_pos_lst = []
-        for x in xrange(len(self._string)):
-            if x in meaningful_pos_lst:
+        for pos in xrange(len(self._string)):
+            if pos in meaningful_pos_lst:
                 continue
             else:
-                non_meaning_pos_lst.append(x)
-                
+                non_meaning_pos_lst.append(pos)
+
         non_meaningful_range = []
-        non_meaningful_range = [as_range(g) for _, g in groupby(non_meaning_pos_lst, key=lambda n, c=count(): n-next(c))]
+        non_meaningful_range = [
+            as_range(g) for _, g in groupby(non_meaning_pos_lst, key=lambda n, c=count(): n-next(c))
+            ]
 
         #print "non-meaningful list: {}\n".format(non_meaningful_range)
         meaningful_dic = dict()
@@ -594,7 +703,6 @@ class WordSegment(object):
             meaningful_dic[component[0]] = component[1]
 
         overall_pos_lst.sort()
-        #print overall_pos_lst
         return_lst = []
         for each in overall_pos_lst:
             if each in meaningful_dic:
