@@ -12,6 +12,7 @@ returns a list of "words" as output.
 
 >>> from wordsegment import WordSegment
 >>> ws = WordSegment()
+#or enbale the google corpus   >>> ws = WordSegment(use_google_corpus=True)
 >>> ws.segment('facebookingirl')
 ['facebook', 'in', 'girl']
 
@@ -178,10 +179,18 @@ class Data(object):
        while the value is the frequency count of this word.
     2. generator that yield word and its frequency
     '''
-    def __init__(self):
+    def __init__(self, use_google_corpus):
         self._unigram_counts = dict()
-        self._unigram_counts = parse_file(
-            join(dirname(realpath(__file__)), 'corpus', 'unigrams.txt')
+        self._use_google_corpus = use_google_corpus
+        if self._use_google_corpus:
+            #use pure google corpus
+            self._unigram_counts = parse_file(
+                join(dirname(realpath(__file__)), 'corpus', 'filtered_1_2_letter_only.txt')
+            )
+        else:
+            #use dictionary-filtered google corpus
+            self._unigram_counts = parse_file(
+                join(dirname(realpath(__file__)), 'corpus', 'unigrams.txt')
             )
 
     @property
@@ -207,8 +216,9 @@ class ConstructCorpus(object):
        value is a list containing all possile English word
        starts with that specific ngram.
     '''
-    def __init__(self, min_length):
+    def __init__(self, min_length, use_google_corpus):
         self._minlen = min_length
+        self._use_google_corpus = use_google_corpus
 
     @property
     def ngram_distribution(self):
@@ -220,7 +230,7 @@ class ConstructCorpus(object):
                words starting with "unive".
         '''
         ngram_distribution = dict()
-        instance_d = Data()
+        instance_d = Data(self._use_google_corpus)
         data = instance_d.data
         for entry in instance_d:
             if len(entry) >= self._minlen:
@@ -242,7 +252,7 @@ class ConstructCorpus(object):
                in the example, it is "unive".
         '''
         ngram_tree = dict()
-        instance_d = Data()
+        instance_d = Data(self._use_google_corpus)
         for entry in instance_d:
             if len(entry) >= self._minlen:
                 cut = entry[:self._minlen]
@@ -262,11 +272,12 @@ class WordSegment(object):
     2. Finds all meaningful words in a string.
     '''
 
-    def __init__(self, min_length=2, casesensitive=False):
+    def __init__(self, min_length=2, casesensitive=False, use_google_corpus=False):
         self._minlen = min_length
         self._string = ''
+        self._use_google_corpus = use_google_corpus
         self._casesensitive = casesensitive
-        corpus = ConstructCorpus(self._minlen)
+        corpus = ConstructCorpus(self._minlen, self._use_google_corpus)
         self.ngram_distribution = corpus.ngram_distribution
         self.ngram_tree = corpus.ngram_tree
 
@@ -485,6 +496,9 @@ class WordSegment(object):
 
         candidate_list = []
         candidate_list = self._optimizing(component)
+#        for each in candidate_list:
+#            print "candidate_list has: {}".format(each)
+
         scored_candidate_list = []
         for each in candidate_list:
             scored_candidate_list.append(self._segment(each))
@@ -536,10 +550,30 @@ class WordSegment(object):
     def _optimizing(self, component):
         if True:
             nodes = component.nodes() #initially nodes = all nodes in component
+#            print "nodes are: {}".format(nodes)
+            starting_words = []
+            min_node = min(nodes)
+            min_pos = min_node[0][0]
+            starting_words = []
+            for each in nodes:
+                if each[0][0] == min_pos:
+                    starting_words.append(each)
+
+            tmp_lst = []
+            for each in starting_words:
+                tmp_lst.append(each[0][1])
+            max_pos = max(tmp_lst)
+            starting_words = []
+            for each in nodes:
+                if each[0][0] <= max_pos:
+                    starting_words.append(each)
+#            print "starting words are: {}".format(starting_words)
+            nodes = starting_words
             nodes.sort()
 
             def search(component, nodes=nodes, node=nodes[0], flag='init'):
                 if not nx.non_neighbors(component, node) and flag != 'init':
+#                    print "no neighbor found for node: {}".format([node])
                     return node
 
                 elif nx.non_neighbors(component, node) and flag != 'init':
@@ -557,6 +591,7 @@ class WordSegment(object):
                             pass
 
                     if flag == "HASNOT":
+#                        print "no forward neighbor folloing node: {}".format([node])
                         #means no forward neighbor found
                         return node
                     else:
@@ -565,11 +600,14 @@ class WordSegment(object):
 
                 def candidates():
                     for node in nodes:
+#                        print "working on node: {}".format(node)
                         if list(nx.non_neighbors(component, node)) != []:
                             for each_non_neighbor in nx.non_neighbors(component, node):
                                 candidate_nodes = [node]
-
+#                                print "candidate_nodes are {}".format(candidate_nodes)
+#                                print "and the each_non_neighbor is {}".format(each_non_neighbor)
                                 if each_non_neighbor[0][0] == node[0][1]:
+#                                    print "position adhered each_non_neighbor found: {0} of node {1}\n".format(each_non_neighbor,node)
                                     candidate_nodes.append(
                                         search(
                                             component, [each_non_neighbor],
@@ -584,14 +622,27 @@ class WordSegment(object):
                             candidate_nodes = [node]
                             yield candidate_nodes
 
-                return list(candidates())
+                tmp_lst = list(candidates())
+                
+                s = []
+                for i in tmp_lst:
+                    if i not in s:
+                        s.append(i)
+
+                return s
 
             optimized_words = search(component) 
+            
+#           print "optimized_words is {}\n".format(optimized_words)
             #dedup
             s = []
             for i in optimized_words:
                 if i not in s:
                     s.append(i)
+#        print "s is {}".format(s)
+#        for each in s:
+#            print '\n' 
+#            print each
 
         return s
 
