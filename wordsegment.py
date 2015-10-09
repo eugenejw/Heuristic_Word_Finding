@@ -151,6 +151,8 @@ from itertools import groupby
 import networkx as nx
 from itertools import groupby, count
 from math import log10
+from functools import wraps
+import inspect
 
 if sys.hexversion < 0x03000000:
     range = xrange
@@ -262,6 +264,56 @@ class ConstructCorpus(object):
                     ngram_tree[cut] = [entry]
 
         return ngram_tree
+
+class key_memoized(object):
+    def __init__(self, func):
+       self.func = func
+       self.cache = {}
+
+    def __call__(self, *args, **kwargs):
+#        print "CHECK: kwargs.items(): {}".format(kwargs.items())
+#        print "CHECK: args: {}".format(args)
+        key = self.key(args, kwargs)
+#        print "key is: {}".format(key)
+        for each in kwargs.items():
+            if isinstance(each[1], list):
+                if len(each[1]) > 1:
+#                    print "QUIT*******************"
+                    return self.func(*args, **kwargs)
+        if key not in self.cache:
+#            print "key not in self.cache***********"
+            self.cache[key] = self.func(*args, **kwargs)
+            return self.cache[key]
+        else:
+#            print "Result from Momery*********"
+            return self.cache[key]
+
+    def normalize_args(self, args, kwargs):
+        spec = inspect.getargs(self.func.__code__).args
+#        print "kwargs.items(): {}".format(kwargs.items())
+        new_kwargs = []
+        for each in kwargs.items():
+            tmp_lst = []
+#            print "working on each {0}, of type {1}".format(each, type(each))
+            for e in each:
+                if isinstance(e, list):
+                    new_e = tuple(e)
+                    tmp_lst.append(new_e)
+#                    print "appended {}".format(new_e)
+                    continue
+                tmp_lst.append(e)
+#                print "appended {}".format(e)
+            new_kwargs.append(tuple(tmp_lst))
+        
+#        print "After tupling, kwargs.items(): {}".format(new_kwargs)
+#        print "dict(new_kwargs + zip(spec, args)): {}".format(dict(new_kwargs + zip(spec, args)))
+        return dict(new_kwargs + zip(spec, args))
+
+    def key(self, args, kwargs):
+        
+        a = self.normalize_args(args, kwargs)
+        return tuple(sorted(a.items()))
+
 
 class WordSegment(object):
     '''
@@ -496,8 +548,11 @@ class WordSegment(object):
 
         candidate_list = []
         candidate_list = self._optimizing(component)
+        
+        
 #        for each in candidate_list:
 #            print "candidate_list has: {}".format(each)
+#            print "candidate_list's first element is : {}".format(each[0])
 
         scored_candidate_list = []
         for each in candidate_list:
@@ -571,6 +626,9 @@ class WordSegment(object):
             nodes = starting_words
             nodes.sort()
 
+
+
+            @key_memoized
             def search(component, nodes=nodes, node=nodes[0], flag='init'):
                 if not nx.non_neighbors(component, node) and flag != 'init':
 #                    print "no neighbor found for node: {}".format([node])
@@ -610,8 +668,8 @@ class WordSegment(object):
 #                                    print "position adhered each_non_neighbor found: {0} of node {1}\n".format(each_non_neighbor,node)
                                     candidate_nodes.append(
                                         search(
-                                            component, [each_non_neighbor],
-                                            each_non_neighbor, flag=''
+                                            component, nodes=[each_non_neighbor],    #DP remembers this list
+                                            node=each_non_neighbor, flag=''
                                             )
                                         )
 
@@ -633,7 +691,7 @@ class WordSegment(object):
 
             optimized_words = search(component) 
             
-#           print "optimized_words is {}\n".format(optimized_words)
+#            print "optimized_words is {}\n".format(optimized_words)
             #dedup
             s = []
             for i in optimized_words:
